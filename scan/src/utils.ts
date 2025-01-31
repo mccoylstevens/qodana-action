@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2025 JetBrains s.r.o.
+ * Copyright 2021-2024 JetBrains s.r.o.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -46,8 +46,7 @@ import {
 import path from 'path'
 import * as fs from 'fs'
 import * as os from 'os'
-import {prFixesBody} from './output'
-import {COMMIT_EMAIL, COMMIT_USER, getCommentTag} from '../../common/output'
+import {COMMIT_EMAIL, COMMIT_USER, prFixesBody} from './output'
 
 export const ANALYSIS_FINISHED_REACTION = '+1'
 export const ANALYSIS_STARTED_REACTION = 'eyes'
@@ -409,7 +408,7 @@ export async function postResultsToPRComments(
     return
   }
   // source dir needed in case of monorepo with projects analyzed by the same tool
-  const comment_tag_pattern = getCommentTag(toolName, sourceDir)
+  const comment_tag_pattern = `<!-- JetBrains/qodana-action@v${VERSION} : ${toolName}, ${sourceDir} -->`
   const body = `${content}\n${comment_tag_pattern}`
   const client = github.getOctokit(getInputs().githubToken)
   const comment_id = await findCommentByTag(client, comment_tag_pattern)
