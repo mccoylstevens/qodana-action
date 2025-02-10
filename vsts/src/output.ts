@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2025 JetBrains s.r.o.
+ * Copyright 2021-2024 JetBrains s.r.o.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,13 +21,12 @@ import {
   QODANA_SHORT_SARIF_NAME,
   VERSION
 } from '../../common/qodana'
-import {getWorkflowRunUrl, postResultsToPRComments, postSummary} from './utils'
+import {parseSarif, postResultsToPRComments, postSummary} from './utils'
 import {
   getCoverageStats,
   getLicenseInfo,
   getReportURL,
   getSummary,
-  parseSarif,
   QODANA_CHECK_NAME
 } from '../../common/output'
 
@@ -45,10 +44,6 @@ so that the action will upload the files as the job artifacts:
             uploadResult: true
 \`\`\`
 `
-
-export function getQodanaHelpString(): string {
-  return `This result was published with [Qodana Task](<${getWorkflowRunUrl()}>)`
-}
 
 /**
  * Publish Qodana results to Azure: comment, job summary.
@@ -71,14 +66,10 @@ export async function publishOutput(
     return
   }
   try {
-    const problems = parseSarif(
-      `${resultsDir}/${QODANA_SARIF_NAME}`,
-      getQodanaHelpString()
-    )
+    const problems = parseSarif(`${resultsDir}/${QODANA_SARIF_NAME}`)
     const reportUrl = getReportURL(resultsDir)
     const coverageInfo = getCoverageStats(
-      getCoverageFromSarif(`${resultsDir}/${QODANA_SHORT_SARIF_NAME}`),
-      false
+      getCoverageFromSarif(`${resultsDir}/${QODANA_SHORT_SARIF_NAME}`)
     )
 
     const licensesInfo = getLicenseInfo(resultsDir)

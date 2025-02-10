@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2025 JetBrains s.r.o.
+ * Copyright 2021-2024 JetBrains s.r.o.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,70 +18,24 @@ import {expect, test} from '@jest/globals'
 import {getCoverageFromSarif, QODANA_OPEN_IN_IDE_NAME, QODANA_REPORT_URL_NAME} from "../qodana";
 import {
   getCoverageStats,
-  getReportURL, parseSarif, ProblemDescriptor
-} from '../output'
+  getReportURL
+} from "../output";
 import * as fs from 'fs'
 import * as path from 'path'
 import * as os from 'os'
-import {outputEmptyFixture, problemDescriptorsDefaultFixture} from './common.test.utils'
 
-test('test passed coverage output using diff', () => {
+test('test passed coverage output', () => {
   const result = getCoverageStats(
-    getCoverageFromSarif('__tests__/data/some.sarif.json'),
-    true
+    getCoverageFromSarif('__tests__/data/some.sarif.json')
   )
-  expect(result).toEqual(passedCoverageFixtureDiff())
+  expect(result).toEqual(passedCoverageFixture())
 })
 
-test('test failed coverage output using diff', () => {
+test('test failed coverage output', () => {
   const result = getCoverageStats(
-    getCoverageFromSarif('__tests__/data/empty.sarif.json'),
-    true
+    getCoverageFromSarif('__tests__/data/empty.sarif.json')
   )
-  expect(result).toEqual(failedCoverageFixtureDiff())
-})
-
-test('test passed coverage output using spam', () => {
-  const result = getCoverageStats(
-    getCoverageFromSarif('__tests__/data/some.sarif.json'),
-    false
-  )
-  expect(result).toEqual(passedCoverageFixtureSpam())
-})
-
-test('test failed coverage output using spam', () => {
-  const result = getCoverageStats(
-    getCoverageFromSarif('__tests__/data/empty.sarif.json'),
-    false
-  )
-  expect(result).toEqual(failedCoverageFixtureSpam())
-})
-
-test('test sarif with problems to output annotations', () => {
-  const output = problemDescriptorsDefaultFixture()
-  const result = parseSarif(
-    '__tests__/data/some.sarif.json',
-    "This is a test help string"
-  )
-  expect(result.problemDescriptions).toEqual(output)
-})
-
-test('test sarif with problems and baseline to output annotations', () => {
-  const output = problemDescriptorsDefaultFixture()
-  const result = parseSarif(
-    '__tests__/data/with.baseline.sarif.json',
-    "This is a test help string"
-  )
-  expect(result.problemDescriptions).toEqual(output)
-})
-
-test('test sarif with no problems to output annotations', () => {
-  const output = outputEmptyFixture()
-  const result = parseSarif(
-    '__tests__/data/empty.sarif.json',
-    "This is a test help string"
-  )
-  expect(result.problemDescriptions).toEqual(output)
+  expect(result).toEqual(failedCoverageFixture())
 })
 
 describe('getReportURL', () => {
@@ -136,25 +90,7 @@ describe('getReportURL', () => {
   })
 })
 
-function passedCoverageFixtureSpam(): string {
-  return `@@ Code coverage @@
-<span style="background-color: #e6f4e6; color: green;">45% total lines covered</span>
-124 lines analyzed, 56 lines covered
-<span style="background-color: #e6f4e6; color: green;">33% fresh lines covered</span>
-9 lines analyzed, 3 lines covered
-# Calculated according to the filters of your coverage tool`
-}
-
-function failedCoverageFixtureSpam(): string {
-  return `@@ Code coverage @@
-<span style="background-color: #ffe6e6; color: red;">0% total lines covered</span>
-100 lines analyzed, 0 lines covered
-<span style="background-color: #ffe6e6; color: red;">0% fresh lines covered</span>
-100 lines analyzed, 0 lines covered
-# Calculated according to the filters of your coverage tool`
-}
-
-function passedCoverageFixtureDiff(): string {
+function passedCoverageFixture(): string {
   return `\`\`\`diff
 @@ Code coverage @@
 + 45% total lines covered
@@ -165,7 +101,7 @@ function passedCoverageFixtureDiff(): string {
 \`\`\``
 }
 
-function failedCoverageFixtureDiff(): string {
+function failedCoverageFixture(): string {
   return `\`\`\`diff
 @@ Code coverage @@
 - 0% total lines covered

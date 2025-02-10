@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2025 JetBrains s.r.o.
+ * Copyright 2021-2024 JetBrains s.r.o.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,11 +19,11 @@ import {
   QODANA_LICENSES_JSON,
   QODANA_LICENSES_MD,
   QODANA_OPEN_IN_IDE_NAME,
-  QODANA_REPORT_URL_NAME, VERSION,
+  QODANA_REPORT_URL_NAME,
 } from "./qodana";
 import * as fs from "fs";
-import type {Log, Result} from 'sarif'
-import {parseRules, Rule} from './utils'
+import type {Result} from 'sarif'
+import {Rule} from './utils'
 
 export const COMMIT_USER = 'qodana-bot'
 export const COMMIT_EMAIL = 'qodana-support@jetbrains.com'
@@ -65,44 +65,6 @@ export interface LicenseInfo {
   packages: number
 }
 
-export interface Output {
-  title: string
-  summary: string
-  text: string
-  problemDescriptions: ProblemDescriptor[]
-}
-
-export function parseSarif(path: string, text: string): Output {
-  const sarif: Log = JSON.parse(
-    fs.readFileSync(path, {encoding: 'utf8'})
-  ) as Log
-  const run = sarif.runs[0]
-  const rules = parseRules(run.tool)
-  let title = 'No new problems found by '
-  let problemDescriptions: ProblemDescriptor[] = []
-  if (run.results?.length) {
-    title = `${run.results.length} ${getProblemPlural(
-      run.results.length
-    )} found by `
-    problemDescriptions = run.results
-      .filter(
-        result =>
-          result.baselineState !== 'unchanged' &&
-          result.baselineState !== 'absent'
-      )
-      .map(result => parseResult(result, rules))
-      .filter((a): a is ProblemDescriptor => a !== null && a !== undefined)
-  }
-  const name = run.tool.driver.fullName || 'Qodana'
-  title += name
-  return {
-    title,
-    text: text,
-    summary: title,
-    problemDescriptions
-  }
-}
-
 export function parseResult(
   result: Result,
   rules: Map<string, Rule>
@@ -137,19 +99,16 @@ ${message}
 
 function makeConclusion(
   conclusion: string,
-  failedByThreshold: boolean,
-  useDiffBlock: boolean,
+  failedByThreshold: boolean
 ): string {
-  if (useDiffBlock) {
-    return failedByThreshold ? `- ${conclusion}` : `+ ${conclusion}`
+  if (failedByThreshold) {
+    return `- ${conclusion}`
   } else {
-    return failedByThreshold
-      ? `<span style="background-color: #ffe6e6; color: red;">${conclusion}</span>`
-      : `<span style="background-color: #e6f4e6; color: green;">${conclusion}</span>`
+    return `+ ${conclusion}`
   }
 }
 
-export function getCoverageStats(c: Coverage, useDiffBlock: boolean): string {
+export function getCoverageStats(c: Coverage): string {
   if (c.totalLines === 0 && c.totalCoveredLines === 0) {
     return ''
   }
@@ -157,23 +116,24 @@ export function getCoverageStats(c: Coverage, useDiffBlock: boolean): string {
   let stats = ''
   if (c.totalLines !== 0) {
     const conclusion = `${c.totalCoverage}% total lines covered`
-    stats += `${makeConclusion(conclusion, c.totalCoverage < c.totalCoverageThreshold, useDiffBlock)}
+    stats += `${makeConclusion(conclusion, c.totalCoverage < c.totalCoverageThreshold)}
 ${c.totalLines} lines analyzed, ${c.totalCoveredLines} lines covered`
   }
 
   if (c.freshLines !== 0) {
     const conclusion = `${c.freshCoverage}% fresh lines covered`
     stats += `
-${makeConclusion(conclusion, c.freshCoverage < c.freshCoverageThreshold, useDiffBlock)}
+${makeConclusion(conclusion, c.freshCoverage < c.freshCoverageThreshold)}
 ${c.freshLines} lines analyzed, ${c.freshCoveredLines} lines covered`
   }
 
-  const coverageBlock =  [
-    `@@ Code coverage @@`,
-    `${stats}`,
-    `# Calculated according to the filters of your coverage tool`
-  ].join('\n')
-  return useDiffBlock ? wrapToDiffBlock(coverageBlock) : coverageBlock
+  return wrapToDiffBlock(
+    [
+      `@@ Code coverage @@`,
+      `${stats}`,
+      `# Calculated according to the filters of your coverage tool`
+    ].join('\n')
+  )
 }
 
 export function getLicenseInfo(
@@ -374,9 +334,4 @@ export function getProblemPlural(count: number): string {
  */
 export function getDepencencyPlural(count: number): string {
   return `dependenc${count !== 1 ? 'ies' : 'y'}`
-}
-
-export function getCommentTag(toolName: string, sourceDir: string): string {
-  // source dir needed in case of monorepo with projects analyzed by the same tool
-  return `<!-- JetBrains/qodana-action@v${VERSION} : ${toolName}, ${sourceDir} -->`
 }
