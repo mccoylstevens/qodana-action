@@ -8,9 +8,9 @@
   "category": "Utility",
   "author": "JetBrains",
   "version": {
-    "Major": 2025,
-    "Minor": 1,
-    "Patch": 0
+    "Major": 2024,
+    "Minor": 3,
+    "Patch": 5
   },
   "instanceNameFormat": "Qodana Scan",
   "inputs": [
@@ -74,33 +74,9 @@
       "name": "prMode",
       "type": "boolean",
       "label": "PR Mode",
-      "defaultValue": true,
+      "defaultValue": false,
       "required": false,
       "helpMarkDown": "Whether the PR analysis gets executed in the pull request mode."
-    },
-    {
-      "name": "postPrComment",
-      "type": "boolean",
-      "label": "Post PR comment",
-      "defaultValue": true,
-      "required": false,
-      "helpMarkDown": "Post a comment with the Qodana results summary to the pull request."
-    },
-    {
-      "name": "pushFixes",
-      "type": "string",
-      "label": "Push quick-fixes",
-      "defaultValue": "none",
-      "required": false,
-      "helpMarkDown": "Push Qodana fixes to the repository, can be `none`, `branch` to the current branch, or `pull-request`."
-    },
-    {
-      "name": "commitMessage",
-      "type": "string",
-      "label": "Commit Message",
-      "defaultValue": "🤖 Apply quick-fixes by Qodana\n\n[skip ci]",
-      "required": false,
-      "helpMarkDown": "Message used when quick-fixes are pushed"
     }
   ],
   "execution": {
